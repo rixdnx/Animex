@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManjaStream - Nonton Anime</title>
+    <style>
+        :root { --bg: #1a1a1a; --card: #2d2d2d; --text: #fff; --accent: #ff0055; }
+        body { margin: 0; font-family: sans-serif; background: var(--bg); color: var(--text); }
+        header { background: var(--card); padding: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.5); display: flex; justify-content: space-between; align-items: center; }
+        h1 { margin: 0; font-size: 1.2rem; color: var(--accent); }
+        .container { padding: 15px; max-width: 1200px; margin: 0 auto; }
+        .section-title { border-left: 4px solid var(--accent); padding-left: 10px; margin: 20px 0 10px; }
+        
+        /* Grid Anime */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
+        .card { background: var(--card); border-radius: 8px; overflow: hidden; position: relative; transition: transform 0.2s; }
+        .card:hover { transform: scale(1.03); }
+        .card img { width: 100%; height: 200px; object-fit: cover; }
+        .card-info { padding: 10px; }
+        .card-title { font-size: 0.9rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; }
+        .episode-tag { position: absolute; top: 5px; right: 5px; background: var(--accent); color: white; padding: 2px 6px; font-size: 0.7rem; border-radius: 4px; }
+        
+        /* Loading */
+        #loading { text-align: center; padding: 50px; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>ManjaStream</h1>
+</header>
+
+<div class="container">
+    <div id="loading">
+        <div class="spinner"></div>
+        <p>Sedang mengambil anime terbaru...</p>
+    </div>
+
+    <div id="content" style="display: none;">
+        <h2 class="section-title">Sedang Tayang (Ongoing)</h2>
+        <div class="grid" id="ongoing-list"></div>
+
+        <h2 class="section-title">Tamat (Completed)</h2>
+        <div class="grid" id="completed-list"></div>
+    </div>
+</div>
+
+<script>
+    // Ini Skrip buat nyambungin Tampilan ke Mesin API abang
+    async function loadAnime() {
+        try {
+            // Panggil API yang udah abang buat
+            const response = await fetch('/api/home');
+            const result = await response.json();
+
+            if(result.status === "success") {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+
+                const ongoingContainer = document.getElementById('ongoing-list');
+                const completedContainer = document.getElementById('completed-list');
+
+                // Render Ongoing
+                result.data.ongoing.forEach(anime => {
+                    ongoingContainer.innerHTML += `
+                        <div class="card">
+                            <span class="episode-tag">${anime.episode}</span>
+                            <img src="${anime.poster}" alt="${anime.title}" loading="lazy">
+                            <div class="card-info">
+                                <div class="card-title">${anime.title}</div>
+                                <small style="color: #aaa">${anime.status}</small>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Render Completed
+                result.data.completed.forEach(anime => {
+                    completedContainer.innerHTML += `
+                        <div class="card">
+                            <img src="${anime.poster}" alt="${anime.title}" loading="lazy">
+                            <div class="card-info">
+                                <div class="card-title">${anime.title}</div>
+                                <small style="color: #aaa">Full Episode</small>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        } catch (error) {
+            document.getElementById('loading').innerHTML = `<p style="color:red">Gagal memuat data. Pastikan API backend sudah di-deploy.</p>`;
+            console.error(error);
+        }
+    }
+
+    // Jalankan fungsi saat web dibuka
+    loadAnime();
+</script>
+
+</body>
+</html>
